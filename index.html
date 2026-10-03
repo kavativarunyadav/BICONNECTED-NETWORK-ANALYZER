@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Biconnected Network Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        header {
+            background: linear-gradient(135deg, #172554, #2563eb);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 16px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 25px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #172554;
+            margin-bottom: 15px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #bbb;
+            border-radius: 7px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .danger {
+            background: #dc2626;
+        }
+
+        .danger:hover {
+            background: #b91c1c;
+        }
+
+        .network {
+            min-height: 450px;
+            background: #eef2ff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        svg {
+            width: 100%;
+            height: 450px;
+        }
+
+        .node {
+            fill: white;
+            stroke: #2563eb;
+            stroke-width: 3;
+        }
+
+        .node-text {
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .edge {
+            stroke: #64748b;
+            stroke-width: 3;
+        }
+
+        .result {
+            background: #f8fafc;
+            border-left: 5px solid #2563eb;
+            padding: 15px;
+            margin-top: 12px;
+            border-radius: 5px;
+        }
+
+        .component {
+            padding: 8px;
+            margin: 5px 0;
+            background: #e0e7ff;
+            border-radius: 6px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 15px;
+        }
+
+        .info-box {
+            padding: 18px;
+            background: #eff6ff;
+            border-radius: 10px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 7px;
+            color: #334155;
+        }
+
+        footer {
+            text-align: center;
+            background: #172554;
+            color: white;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        @media(max-width:650px) {
+            header h1 {
+                font-size: 25px;
+            }
+
+            .container {
+                width: 94%;
+            }
+
+            .network,
+            svg {
+                height: 350px;
+                min-height: 350px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Biconnected Network Analyzer</h1>
+    <p>Analyze communication networks using graph algorithms</p>
+</header>
+
+
+<div class="container">
+
+    <!-- ABOUT -->
+
+    <div class="card">
+
+        <h2>About the Project</h2>
+
+        <p>
+            This system analyzes a communication network and identifies
+            articulation points, connected components and biconnected
+            components using graph algorithms.
+        </p>
+
+        <br>
+
+        <div class="info-grid">
+
+            <div class="info-box">
+                <h3>Algorithm</h3>
+                <p>Depth-First Search (DFS)</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Analysis</h3>
+                <p>Articulation Points</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Components</h3>
+                <p>Biconnected Components</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Technology</h3>
+                <p>HTML, CSS, JavaScript</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADD CONNECTION -->
+
+    <div class="card">
+
+        <h2>Add Network Connection</h2>
+
+        <div class="input-row">
+
+            <input
+                type="text"
+                id="node1"
+                placeholder="Router A"
+            >
+
+            <input
+                type="text"
+                id="node2"
+                placeholder="Router B"
+            >
+
+            <button onclick="addEdge()">
+                Add Connection
+            </button>
+
+            <button onclick="loadExample()">
+                Load Example
+            </button>
+
+            <button
+                class="danger"
+                onclick="clearNetwork()">
+                Clear Network
+            </button>
+
+        </div>
+
+        <div class="status" id="status">
+            Ready. Add network connections or load the example.
+        </div>
+
+    </div>
+
+
+    <!-- GRAPH -->
+
+    <div class="card">
+
+        <h2>Network Visualization</h2>
+
+        <div class="network">
+
+            <svg
+                id="graph"
+                viewBox="0 0 1000 450">
+            </svg>
+
+        </div>
+
+    </div>
+
+
+    <!-- ALGORITHMS -->
+
+    <div class="card">
+
+        <h2>Run Algorithms</h2>
+
+        <div class="input-row">
+
+            <button onclick="findArticulationPoints()">
+                Find Articulation Points
+            </button>
+
+            <button onclick="findBiconnectedComponents()">
+                Find Biconnected Components
+            </button>
+
+            <button onclick="findConnectedComponents()">
+                Find Connected Components
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULTS -->
+
+    <div class="card">
+
+        <h2>Analysis Results</h2>
+
+        <div id="result">
+
+            <p>
+                Add network connections and run an algorithm.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+    <p>Biconnected Network Analyzer</p>
+    <p>Graph Algorithm Visualization</p>
+</footer>
+
+
+<script>
+
+let graph = {};
+
+
+// =============================
+// ADD EDGE
+// =============================
+
+function addEdge() {
+
+    let a = document
+        .getElementById("node1")
+        .value
+        .trim()
+        .toUpperCase();
+
+    let b = document
+        .getElementById("node2")
+        .value
+        .trim()
+        .toUpperCase();
+
+
+    if (a === "" || b === "") {
+
+        alert("Please enter both routers.");
+
+        return;
+    }
+
+
+    if (a === b) {
+
+        alert("A router cannot connect to itself.");
+
+        return;
+    }
+
+
+    if (!graph[a])
+        graph[a] = [];
+
+
+    if (!graph[b])
+        graph[b] = [];
+
+
+    if (!graph[a].includes(b))
+        graph[a].push(b);
+
+
+    if (!graph[b].includes(a))
+        graph[b].push(a);
+
+
+    document.getElementById("node1").value = "";
+    document.getElementById("node2").value = "";
+
+
+    drawGraph();
+
+
+    document.getElementById("status").innerText =
+        "Connection " + a + " ↔ " + b + " added successfully.";
+
+}
+
+
+// =============================
+// LOAD EXAMPLE
+// =============================
+
+function loadExample() {
+
+    graph = {
+
+        A: ["B", "C"],
+
+        B: ["A", "C", "D"],
+
+        C: ["A", "B", "D"],
+
+        D: ["B", "C", "E"],
+
+        E: ["D", "F"],
+
+        F: ["E"]
+
+    };
+
+
+    drawGraph();
+
+
+    document.getElementById("result").innerHTML =
+        "<div class='result'>" +
+        "<b>Example network loaded.</b><br><br>" +
+        "You can now run any of the graph algorithms." +
+        "</div>";
+
+
+    document.getElementById("status").innerText =
+        "Example network loaded successfully.";
+
+}
+
+
+// =============================
+// CLEAR
+// =============================
+
+function clearNetwork() {
+
+    graph = {};
+
+    document.getElementById("graph").innerHTML = "";
+
+    document.getElementById("result").innerHTML =
+        "<p>Network cleared.</p>";
+
+    document.getElementById("status").innerText =
+        "Network cleared. Add routers to begin.";
+
+}
+
+
+// =============================
+// DRAW GRAPH
+// =============================
+
+function drawGraph() {
+
+    let svg = document.getElementById("graph");
+
+    svg.innerHTML = "";
+
+    let nodes = Object.keys(graph);
+
+
+    if (nodes.length === 0)
+        return;
+
+
+    let positions = {};
+
+    let centerX = 500;
+
+    let centerY = 225;
+
+    let radius = 170;
+
+
+    nodes.forEach((node, index) => {
+
+        let angle =
+            (2 * Math.PI * index) / nodes.length;
+
+
+        positions[node] = {
+
+            x:
+                centerX +
+                radius *
+                Math.cos(angle),
+
+            y:
+                centerY +
+                radius *
+                Math.sin(angle)
+
+        };
+
+    });
+
+
+    // DRAW EDGES
+
+    let drawn = new Set();
+
+
+    nodes.forEach(a => {
+
+        graph[a].forEach(b => {
+
+            let key =
+                [a, b]
+                .sort()
+                .join("-");
+
+
+            if (drawn.has(key))
+                return;
+
+
+            drawn.add(key);
+
+
+            let line =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "line"
+                );
+
+
+            line.setAttribute(
+                "x1",
+                positions[a].x
+            );
+
+
+            line.setAttribute(
+                "y1",
+                positions[a].y
+            );
+
+
+            line.setAttribute(
+                "x2",
+                positions[b].x
+            );
+
+
+            line.setAttribute(
+                "y2",
+                positions[b].y
+            );
+
+
+            line.setAttribute(
+                "class",
+                "edge"
+            );
+
+
+            svg.appendChild(line);
+
+        });
+
+    });
+
+
+    // DRAW NODES
+
+    nodes.forEach(node => {
+
+        let circle =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "circle"
+            );
+
+
+        circle.setAttribute(
+            "cx",
+            positions[node].x
+        );
+
+
+        circle.setAttribute(
+            "cy",
+            positions[node].y
+        );
+
+
+        circle.setAttribute(
+            "r",
+            "28"
+        );
+
+
+        circle.setAttribute(
+            "class",
+            "node"
+        );
+
+
+        svg.appendChild(circle);
+
+
+        let text =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
+            );
+
+
+        text.setAttribute(
+            "x",
+            positions[node].x
+        );
+
+
+        text.setAttribute(
+            "y",
+            positions[node].y
+        );
+
+
+        text.setAttribute(
+            "class",
+            "node-text"
+        );
+
+
+        text.textContent = node;
+
+
+        svg.appendChild(text);
+
+    });
+
+}
+
+
+// =============================
+// ARTICULATION POINTS
+// =============================
+
+function findArticulationPoints() {
+
+    let visited = {};
+
+    let disc = {};
+
+    let low = {};
+
+    let parent = {};
+
+    let time = 0;
+
+    let articulation = new Set();
+
+
+    Object.keys(graph).forEach(node => {
+
+        parent[node] = null;
+
+    });
+
+
+    function DFS(u) {
+
+        visited[u] = true;
+
+        disc[u] = low[u] = ++time;
+
+        let children = 0;
+
+
+        for (let v of graph[u]) {
+
+            if (!visited[v]) {
+
+                parent[v] = u;
+
+                children++;
+
+
+                DFS(v);
+
+
+                low[u] =
+                    Math.min(
+                        low[u],
+                        low[v]
+                    );
+
+
+                if (
+                    parent[u] === null &&
+                    children > 1
+                ) {
+
+                    articulation.add(u);
+
+                }
+
+
+                if (
+                    parent[u] !== null &&
+                    low[v] >= disc[u]
+                ) {
+
+                    articulation.add(u);
+
+                }
+
+            }
+
+            else if (
+                v !== parent[u]
+            ) {
+
+                low[u] =
+                    Math.min(
+                        low[u],
+                        disc[v]
+                    );
+
+            }
+
+        }
+
+    }
+
+
+    for (let node of Object.keys(graph)) {
+
+        if (!visited[node]) {
+
+            DFS(node);
+
+        }
+
+    }
+
+
+    let result =
+        document.getElementById("result");
+
+
+    if (articulation.size === 0) {
+
+        result.innerHTML =
+            "<div class='result'>" +
+            "<b>No articulation points found.</b>" +
+            "</div>";
+
+    }
+
+    else {
+
+        result.innerHTML =
+            "<div class='result'>" +
+            "<b>Articulation Points:</b>" +
+            "<br><br>" +
+            [...articulation].join(" , ") +
+            "</div>";
+
+    }
+
+}
+
+
+// =============================
+// CONNECTED COMPONENTS
+// =============================
+
+function findConnectedComponents() {
+
+    let visited = new Set();
+
+    let components = [];
+
+
+    function DFS(node, component) {
+
+        visited.add(node);
+
+        component.push(node);
+
+
+        for (let next of graph[node]) {
+
+            if (!visited.has(next)) {
+
+                DFS(next, component);
+
+            }
+
+        }
+
+    }
+
+
+    for (let node of Object.keys(graph)) {
+
+        if (!visited.has(node)) {
+
+            let component = [];
+
+            DFS(node, component);
+
+            components.push(component);
+
+        }
+
+    }
+
+
+    let html =
+        "<div class='result'>" +
+        "<b>Connected Components:</b>" +
+        "<br><br>";
+
+
+    components.forEach(
+        (component, index) => {
+
+            html +=
+                "<div class='component'>" +
+                "Component " +
+                (index + 1) +
+                ": " +
+                component.join(" → ") +
+                "</div>";
+
+        }
+    );
+
+
+    html += "</div>";
+
+
+    document.getElementById(
+        "result"
+    ).innerHTML = html;
+
+}
+
+
+// =============================
+// BICONNECTED COMPONENTS
+// =============================
+
+function findBiconnectedComponents() {
+
+    let discovery = {};
+
+    let low = {};
+
+    let parent = {};
+
+    let time = 0;
+
+    let stack = [];
+
+    let components = [];
+
+
+    Object.keys(graph).forEach(node => {
+
+        parent[node] = null;
+
+    });
+
+
+    function DFS(u) {
+
+        discovery[u] =
+            low[u] =
+            ++time;
+
+
+        let children = 0;
+
+
+        for (let v of graph[u]) {
+
+            if (!discovery[v]) {
+
+                children++;
+
+                parent[v] = u;
+
+                stack.push([u, v]);
+
+
+                DFS(v);
+
+
+                low[u] =
+                    Math.min(
+                        low[u],
+                        low[v]
+                    );
+
+
+                if (
+                    (parent[u] === null &&
+                     children > 1) ||
+
+                    (parent[u] !== null &&
+                     low[v] >= discovery[u])
+                ) {
+
+                    let component = [];
+
+                    let edge;
+
+
+                    do {
+
+                        edge = stack.pop();
+
+                        component.push(
+                            edge[0] +
+                            "-" +
+                            edge[1]
+                        );
+
+                    }
+                    while (
+                        edge[0] !== u ||
+                        edge[1] !== v
+                    );
+
+
+                    components.push(
+                        component
+                    );
+
+                }
+
+            }
+
+            else if (
+                v !== parent[u] &&
+                discovery[v] < discovery[u]
+            ) {
+
+                low[u] =
+                    Math.min(
+                        low[u],
+                        discovery[v]
+                    );
+
+
+                stack.push([u, v]);
+
+            }
+
+        }
+
+    }
+
+
+    for (let node of Object.keys(graph)) {
+
+        if (!discovery[node]) {
+
+            DFS(node);
+
+
+            if (stack.length > 0) {
+
+                let component = [];
+
+
+                while (stack.length > 0) {
+
+                    let edge =
+                        stack.pop();
+
+
+                    component.push(
+                        edge[0] +
+                        "-" +
+                        edge[1]
+                    );
+
+                }
+
+
+                components.push(
+                    component
+                );
+
+            }
+
+        }
+
+    }
+
+
+    let html =
+        "<div class='result'>" +
+        "<b>Biconnected Components:</b>" +
+        "<br><br>";
+
+
+    if (components.length === 0) {
+
+        html +=
+            "No biconnected components found.";
+
+    }
+
+    else {
+
+        components.forEach(
+            (component, index) => {
+
+                html +=
+                    "<div class='component'>" +
+                    "Component " +
+                    (index + 1) +
+                    ": " +
+                    component.join(", ") +
+                    "</div>";
+
+            }
+        );
+
+    }
+
+
+    html += "</div>";
+
+
+    document.getElementById(
+        "result"
+    ).innerHTML = html;
+
+}
+
+
+// Load example automatically
+
+loadExample();
+
+</script>
+
+</body>
+</html>
